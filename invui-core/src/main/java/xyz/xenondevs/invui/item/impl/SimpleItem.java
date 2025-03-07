@@ -40,8 +40,9 @@ public class SimpleItem extends AbstractItem {
         this.itemProvider = new ItemWrapper(itemStack);
         this.clickHandler = clickHandler;
     }
-    
-    public ItemProvider getItemProvider() {
+
+    @Override
+    public ItemProvider getItemProvider(@Nullable Player viewer) {
         return itemProvider;
     }
     

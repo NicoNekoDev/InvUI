@@ -9,4 +9,4 @@ import xyz.xenondevs.invui.item.ItemBuilder
 /**
  * Sets the lore of the item stack.
  */
-fun ItemBuilder.setLore(lore: List<Array<BaseComponent>>): ItemBuilder = setLore(lore.map { BungeeComponentWrapper(it) })
+fun ItemBuilder.setLore(lore: List<Array<String>>): ItemBuilder = setLore(lore)

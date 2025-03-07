@@ -33,7 +33,7 @@ class CartographyInventoryImpl extends CartographyTableMenu implements Cartograp
     );
     
     private final ResultContainer resultContainer = ReflectionUtils.getFieldValue(RESULT_CONTAINER_FIELD, this);
-    private final CraftInventoryView view;
+    private final CraftInventoryView<?> view;
     private final ServerPlayer player;
     
     private boolean open;
@@ -48,7 +48,7 @@ class CartographyInventoryImpl extends CartographyTableMenu implements Cartograp
         this.player = player;
         setTitle(title);
         CraftInventoryCartography inventory = new CraftInventoryCartography(container, resultContainer);
-        view = new CraftInventoryView(player.getBukkitEntity(), inventory, this);
+        view = new CraftInventoryView<>(player.getBukkitEntity(), inventory, this);
     }
     
     public void open() {
@@ -105,7 +105,7 @@ class CartographyInventoryImpl extends CartographyTableMenu implements Cartograp
     // --- CartographyTableMenu ---
     
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftInventoryView<?> getBukkitView() {
         return view;
     }
     

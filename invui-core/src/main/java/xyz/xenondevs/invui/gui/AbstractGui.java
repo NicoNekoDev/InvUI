@@ -42,19 +42,19 @@ import java.util.stream.Collectors;
  * such as {@link Gui#normal()}.
  */
 public abstract class AbstractGui implements Gui, GuiParent {
-    
+
     private final int width;
     private final int height;
     private final int size;
     private final SlotElement[] slotElements;
     private final Set<GuiParent> parents = new HashSet<>();
-    
+
     private boolean frozen;
     private boolean ignoreObscuredInventorySlots = true;
     private ItemProvider background;
     private Animation animation;
     private SlotElement[] animationElements;
-    
+
     /**
      * Creates a new {@link AbstractGui} with the specified width and height.
      *
@@ -67,7 +67,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
         this.size = width * height;
         slotElements = new SlotElement[size];
     }
-    
+
     /**
      * Handles a click on a slot in the {@link AbstractGui}.
      *
@@ -82,7 +82,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
             event.setCancelled(true);
             return;
         }
-        
+
         SlotElement slotElement = slotElements[slotNumber];
         if (slotElement instanceof SlotElement.LinkedSlotElement) {
             SlotElement.LinkedSlotElement linkedElement = (SlotElement.LinkedSlotElement) slotElement;
@@ -96,9 +96,9 @@ public abstract class AbstractGui implements Gui, GuiParent {
             handleInvSlotElementClick((SlotElement.InventorySlotElement) slotElement, event);
         } else event.setCancelled(true); // Only InventorySlotElements have allowed interactions
     }
-    
+
     // region inventories
-    
+
     /**
      * Handles a click on an {@link SlotElement.InventorySlotElement}.
      *
@@ -109,22 +109,22 @@ public abstract class AbstractGui implements Gui, GuiParent {
         // these actions are ignored as they don't modify the inventory
         InventoryAction action = event.getAction();
         if (action != InventoryAction.CLONE_STACK
-            && action != InventoryAction.DROP_ALL_CURSOR
-            && action != InventoryAction.DROP_ONE_CURSOR
+                && action != InventoryAction.DROP_ALL_CURSOR
+                && action != InventoryAction.DROP_ONE_CURSOR
         ) {
             event.setCancelled(true);
-            
+
             Inventory inventory = element.getInventory();
             int slot = element.getSlot();
-            
+
             Player player = (Player) event.getWhoClicked();
-            
+
             ItemStack cursor = ItemUtils.takeUnlessEmpty(event.getCursor());
             ItemStack clicked = ItemUtils.takeUnlessEmpty(event.getCurrentItem());
-            
+
             ItemStack technicallyClicked = inventory.getItem(slot);
             if (inventory.isSynced(slot, clicked) || didClickBackgroundItem(player, element, inventory, slot, clicked)) {
-                
+
                 // using enum names because SWAP_OFFHAND does not exist on earlier versions 
                 switch (event.getClick().name()) {
                     case "LEFT":
@@ -159,16 +159,16 @@ public abstract class AbstractGui implements Gui, GuiParent {
             }
         }
     }
-    
+
     private boolean didClickBackgroundItem(Player player, SlotElement.InventorySlotElement element, Inventory inventory, int slot, ItemStack clicked) {
         String lang = player.getLocale();
         return !inventory.hasItem(slot) && (isBuilderSimilar(background, lang, clicked) || isBuilderSimilar(element.getBackground(), lang, clicked));
     }
-    
+
     private boolean isBuilderSimilar(ItemProvider builder, String lang, ItemStack expected) {
         return builder != null && builder.get(lang).isSimilar(expected);
     }
-    
+
     /**
      * Handles a left click on an {@link SlotElement.InventorySlotElement}.
      *
@@ -183,9 +183,9 @@ public abstract class AbstractGui implements Gui, GuiParent {
     protected void handleInvLeftClick(InventoryClickEvent event, Inventory inventory, int slot, Player player, ItemStack clicked, ItemStack cursor) {
         // nothing happens if both cursor and clicked stack are empty
         if (clicked == null && cursor == null) return;
-        
+
         UpdateReason updateReason = new PlayerUpdateReason(player, event);
-        
+
         if (cursor == null) {
             // if the cursor is empty, pick the stack up
             if (inventory.setItem(updateReason, slot, null))
@@ -205,7 +205,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
                 event.setCursor(clicked);
         }
     }
-    
+
     /**
      * Handles a right click on an {@link SlotElement.InventorySlotElement}.
      *
@@ -220,21 +220,21 @@ public abstract class AbstractGui implements Gui, GuiParent {
     protected void handleInvRightClick(InventoryClickEvent event, Inventory inventory, int slot, Player player, ItemStack clicked, ItemStack cursor) {
         // nothing happens if both cursor and clicked stack are empty
         if (clicked == null && cursor == null) return;
-        
+
         UpdateReason updateReason = new PlayerUpdateReason(player, event);
-        
+
         if (cursor == null) {
             // if the cursor is empty, split the stack to the cursor
             // if the stack is not divisible by 2, give the cursor the bigger part
             int clickedAmount = clicked.getAmount();
             int newClickedAmount = clickedAmount / 2;
             int newCursorAmount = clickedAmount - newClickedAmount;
-            
+
             cursor = clicked.clone();
-            
+
             clicked.setAmount(newClickedAmount);
             cursor.setAmount(newCursorAmount);
-            
+
             if (inventory.setItem(updateReason, slot, clicked))
                 event.setCursor(cursor);
         } else {
@@ -248,7 +248,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
             }
         }
     }
-    
+
     /**
      * Handles a shift click on an {@link SlotElement.InventorySlotElement}.
      *
@@ -260,13 +260,13 @@ public abstract class AbstractGui implements Gui, GuiParent {
      */
     protected void handleInvItemShift(InventoryClickEvent event, Inventory inventory, int slot, Player player, ItemStack clicked) {
         if (clicked == null) return;
-        
+
         ItemStack previousStack = clicked.clone();
-        
+
         UpdateReason updateReason = new PlayerUpdateReason(player, event);
         Window window = WindowManager.getInstance().getOpenWindow(player);
         ItemPreUpdateEvent updateEvent = inventory.callPreUpdateEvent(updateReason, slot, previousStack, null);
-        
+
         if (!updateEvent.isCancelled()) {
             int leftOverAmount;
             if (window instanceof AbstractDoubleWindow) {
@@ -278,23 +278,23 @@ public abstract class AbstractGui implements Gui, GuiParent {
                 } else {
                     otherGui = this;
                 }
-                
+
                 leftOverAmount = ((AbstractGui) otherGui).putIntoFirstInventory(updateReason, clicked, inventory);
             } else {
                 Inventory playerInventory = ReferencingInventory.fromReversedPlayerStorageContents(player.getInventory());
                 leftOverAmount = playerInventory.addItem(null, inventory.getItem(slot));
             }
-            
+
             clicked.setAmount(leftOverAmount);
             if (ItemUtils.isEmpty(clicked))
                 clicked = null;
-            
+
             inventory.setItemSilently(slot, clicked);
-            
+
             inventory.callPostUpdateEvent(updateReason, slot, previousStack, clicked);
         }
     }
-    
+
     /**
      * Handles a number key press on an {@link SlotElement.InventorySlotElement}.
      *
@@ -311,14 +311,14 @@ public abstract class AbstractGui implements Gui, GuiParent {
             org.bukkit.inventory.Inventory playerInventory = player.getInventory();
             int hotbarButton = event.getHotbarButton();
             ItemStack hotbarItem = ItemUtils.takeUnlessEmpty(playerInventory.getItem(hotbarButton));
-            
+
             UpdateReason updateReason = new PlayerUpdateReason(player, event);
-            
+
             if (inventory.setItem(updateReason, slot, hotbarItem))
                 playerInventory.setItem(hotbarButton, clicked);
         }
     }
-    
+
     /**
      * Handles an off-hand key press on an {@link SlotElement.InventorySlotElement}.
      *
@@ -334,14 +334,14 @@ public abstract class AbstractGui implements Gui, GuiParent {
         if (window instanceof AbstractSingleWindow) {
             PlayerInventory playerInventory = player.getInventory();
             ItemStack offhandItem = ItemUtils.takeUnlessEmpty(playerInventory.getItemInOffHand());
-            
+
             UpdateReason updateReason = new PlayerUpdateReason(player, event);
-            
+
             if (inventory.setItem(updateReason, slot, offhandItem))
                 playerInventory.setItemInOffHand(clicked);
         }
     }
-    
+
     /**
      * Handles dropping items from a slot in an {@link SlotElement.InventorySlotElement}.
      *
@@ -354,9 +354,9 @@ public abstract class AbstractGui implements Gui, GuiParent {
      */
     protected void handleInvDrop(boolean ctrl, InventoryClickEvent event, Inventory inventory, int slot, Player player, ItemStack clicked) {
         if (clicked == null) return;
-        
+
         UpdateReason updateReason = new PlayerUpdateReason(player, event);
-        
+
         if (ctrl) {
             if (inventory.setItem(updateReason, slot, null)) {
                 InventoryUtils.dropItemLikePlayer(player, clicked);
@@ -365,9 +365,9 @@ public abstract class AbstractGui implements Gui, GuiParent {
             clicked.setAmount(1);
             InventoryUtils.dropItemLikePlayer(player, clicked);
         }
-        
+
     }
-    
+
     /**
      * Handles a double click on an {@link SlotElement.InventorySlotElement}.
      *
@@ -378,12 +378,12 @@ public abstract class AbstractGui implements Gui, GuiParent {
     protected void handleInvDoubleClick(InventoryClickEvent event, Player player, ItemStack cursor) {
         if (cursor == null)
             return;
-        
+
         // windows handle cursor collect because it is a cross-inventory / cross-gui operation
         Window window = WindowManager.getInstance().getOpenWindow(player);
         ((AbstractWindow) window).handleCursorCollect(event);
     }
-    
+
     /**
      * Handles an item drag on a single slot of this {@link AbstractGui}.
      *
@@ -397,7 +397,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
         // cancel all clicks if the gui is frozen or an animation is running
         if (frozen || animation != null)
             return false;
-        
+
         SlotElement element = getSlotElement(slot);
         if (element != null) element = element.getHoldingElement();
         if (element instanceof SlotElement.InventorySlotElement) {
@@ -408,10 +408,10 @@ public abstract class AbstractGui implements Gui, GuiParent {
                 return inventory.setItem(updateReason, viSlot, newStack);
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Handles an item shift click from outside this {@link AbstractGui} into it.
      *
@@ -419,23 +419,23 @@ public abstract class AbstractGui implements Gui, GuiParent {
      */
     public void handleItemShift(InventoryClickEvent event) {
         event.setCancelled(true);
-        
+
         // cancel all clicks if the gui is frozen or an animation is running
         if (frozen || animation != null)
             return;
-        
+
         Player player = (Player) event.getWhoClicked();
         ItemStack clicked = event.getCurrentItem();
-        
+
         UpdateReason updateReason = new PlayerUpdateReason(player, event);
-        
+
         int amountLeft = putIntoFirstInventory(updateReason, clicked);
         if (amountLeft != clicked.getAmount()) {
             if (amountLeft != 0) event.getCurrentItem().setAmount(amountLeft);
             else event.getClickedInventory().setItem(event.getSlot(), null);
         }
     }
-    
+
     /**
      * Puts an {@link ItemStack} into the first {@link Inventory} that accepts it.
      *
@@ -447,7 +447,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
     protected int putIntoFirstInventory(UpdateReason updateReason, ItemStack itemStack, Inventory... ignored) {
         Collection<Inventory> inventories = getAllInventories(ignored);
         int originalAmount = itemStack.getAmount();
-        
+
         if (!inventories.isEmpty()) {
             for (Inventory inventory : inventories) {
                 int amountLeft = inventory.addItem(updateReason, itemStack);
@@ -455,10 +455,10 @@ public abstract class AbstractGui implements Gui, GuiParent {
                     return amountLeft;
             }
         }
-        
+
         return originalAmount;
     }
-    
+
     /**
      * Gets all {@link Inventory Inventories} and their slots that are used in this {@link AbstractGui}.
      *
@@ -468,25 +468,25 @@ public abstract class AbstractGui implements Gui, GuiParent {
     public Map<Inventory, Set<Integer>> getAllInventorySlots(Inventory... ignored) {
         TreeMap<Inventory, Set<Integer>> slots = new TreeMap<>(Comparator.comparingInt(Inventory::getGuiPriority).reversed());
         Set<Inventory> ignoredSet = Arrays.stream(ignored).collect(Collectors.toSet());
-        
+
         for (SlotElement element : slotElements) {
             if (element == null)
                 continue;
-            
+
             element = element.getHoldingElement();
             if (element instanceof SlotElement.InventorySlotElement) {
                 SlotElement.InventorySlotElement invElement = (SlotElement.InventorySlotElement) element;
                 Inventory inventory = invElement.getInventory();
                 if (ignoredSet.contains(inventory))
                     continue;
-                
+
                 slots.computeIfAbsent(inventory, i -> new HashSet<>()).add(invElement.getSlot());
             }
         }
-        
+
         return slots;
     }
-    
+
     /**
      * Gets all {@link Inventory Inventories} that are used in this {@link AbstractGui}.
      * If {@link Gui#isIgnoreObscuredInventorySlots()}, is true, {@link ObscuredInventory ObscuredInventories}
@@ -499,18 +499,18 @@ public abstract class AbstractGui implements Gui, GuiParent {
     public Collection<Inventory> getAllInventories(Inventory... ignored) {
         if (!ignoreObscuredInventorySlots)
             return getAllInventorySlots(ignored).keySet();
-        
+
         ArrayList<Inventory> inventories = new ArrayList<>();
         for (Map.Entry<Inventory, Set<Integer>> entry : getAllInventorySlots(ignored).entrySet()) {
             Inventory inventory = entry.getKey();
             Set<Integer> slots = entry.getValue();
             inventories.add(new ObscuredInventory(inventory, slot -> !slots.contains(slot)));
         }
-        
+
         return inventories;
     }
     // endregion
-    
+
     @Override
     public void handleSlotElementUpdate(Gui child, int slotIndex) {
         // find all SlotElements that link to this slotIndex in this child Gui and notify all parents
@@ -523,7 +523,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
             }
         }
     }
-    
+
     /**
      * Adds a {@link GuiParent} to this {@link AbstractGui}.
      *
@@ -532,7 +532,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
     public void addParent(@NotNull GuiParent parent) {
         parents.add(parent);
     }
-    
+
     /**
      * Removes a {@link GuiParent} from this {@link AbstractGui}.
      *
@@ -541,7 +541,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
     public void removeParent(@NotNull GuiParent parent) {
         parents.remove(parent);
     }
-    
+
     /**
      * Gets all {@link GuiParent GuiParents} of this {@link AbstractGui}.
      *
@@ -550,12 +550,12 @@ public abstract class AbstractGui implements Gui, GuiParent {
     public Set<GuiParent> getParents() {
         return parents;
     }
-    
+
     @Override
     public @NotNull List<@NotNull Window> findAllWindows() {
         List<Window> windows = new ArrayList<>();
         List<GuiParent> unexploredParents = new ArrayList<>(this.parents);
-        
+
         while (!unexploredParents.isEmpty()) {
             List<GuiParent> parents = new ArrayList<>(unexploredParents);
             unexploredParents.clear();
@@ -564,30 +564,30 @@ public abstract class AbstractGui implements Gui, GuiParent {
                 else if (parent instanceof Window) windows.add((Window) parent);
             }
         }
-        
+
         return windows;
     }
-    
+
     @Override
     public @NotNull Set<@NotNull Player> findAllCurrentViewers() {
         return findAllWindows().stream()
-            .map(Window::getCurrentViewer)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
+                .map(Window::getCurrentViewer)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
-    
+
     @Override
     public void closeForAllViewers() {
         findAllCurrentViewers().forEach(Player::closeInventory);
     }
-    
+
     @Override
     public void playAnimation(@NotNull Animation animation, @Nullable Predicate<@NotNull SlotElement> filter) {
         if (animation != null) cancelAnimation();
-        
+
         this.animation = animation;
         this.animationElements = slotElements.clone();
-        
+
         List<Integer> slots = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             SlotElement element = getSlotElement(i);
@@ -596,7 +596,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
                 setSlotElement(i, null);
             }
         }
-        
+
         animation.setSlots(slots);
         animation.setGui(this);
         animation.setWindows(findAllWindows());
@@ -605,23 +605,23 @@ public abstract class AbstractGui implements Gui, GuiParent {
             this.animation = null;
             this.animationElements = null;
         });
-        
+
         animation.start();
     }
-    
+
     @Override
     public void cancelAnimation() {
         if (this.animation != null) {
             // cancel the scheduler task and set animation to null
             animation.cancel();
             animation = null;
-            
+
             // show all SlotElements again
             for (int i = 0; i < size; i++) setSlotElement(i, animationElements[i]);
             animationElements = null;
         }
     }
-    
+
     /**
      * Finds an updates all {@link ControlItem ControlItems} in this {@link AbstractGui}.
      */
@@ -634,46 +634,46 @@ public abstract class AbstractGui implements Gui, GuiParent {
             }
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public void setSlotElement(int index, SlotElement slotElement) {
         SlotElement oldElement = slotElements[index];
-        
+
         // set new SlotElement on index
         slotElements[index] = slotElement;
-        
+
         // set the gui if it is a ControlItem
         if (slotElement instanceof SlotElement.ItemSlotElement) {
             Item item = ((SlotElement.ItemSlotElement) slotElement).getItem();
             if (item instanceof ControlItem<?>)
                 ((ControlItem<Gui>) item).setGui(this);
         }
-        
+
         // notify parents that a SlotElement has been changed
         parents.forEach(parent -> parent.handleSlotElementUpdate(this, index));
-        
+
         AbstractGui oldLink = oldElement instanceof SlotElement.LinkedSlotElement ? (AbstractGui) ((SlotElement.LinkedSlotElement) oldElement).getGui() : null;
         AbstractGui newLink = slotElement instanceof SlotElement.LinkedSlotElement ? (AbstractGui) ((SlotElement.LinkedSlotElement) slotElement).getGui() : null;
-        
+
         // if newLink is the same as oldLink, there isn't anything to be done
         if (newLink == oldLink) return;
-        
+
         // if the slot previously linked to Gui
         if (oldLink != null) {
             // If no other slot still links to that Gui, remove this Gui from parents
             if (Arrays.stream(slotElements)
-                .filter(element -> element instanceof SlotElement.LinkedSlotElement)
-                .map(element -> ((SlotElement.LinkedSlotElement) element).getGui())
-                .noneMatch(gui -> gui == oldLink)) oldLink.removeParent(this);
+                    .filter(element -> element instanceof SlotElement.LinkedSlotElement)
+                    .map(element -> ((SlotElement.LinkedSlotElement) element).getGui())
+                    .noneMatch(gui -> gui == oldLink)) oldLink.removeParent(this);
         }
-        
+
         // if the slot now links to a Gui add this as parent
         if (newLink != null) {
             newLink.addParent(this);
         }
     }
-    
+
     @Override
     public void addSlotElements(@NotNull SlotElement... slotElements) {
         for (SlotElement element : slotElements) {
@@ -682,29 +682,29 @@ public abstract class AbstractGui implements Gui, GuiParent {
             setSlotElement(emptyIndex, element);
         }
     }
-    
+
     @Override
     public @Nullable SlotElement getSlotElement(int index) {
         return slotElements[index];
     }
-    
+
     @Override
     public boolean hasSlotElement(int index) {
         return slotElements[index] != null;
     }
-    
+
     @Override
     @Nullable
     public SlotElement @NotNull [] getSlotElements() {
         return slotElements.clone();
     }
-    
+
     @Override
     public void setItem(int index, @Nullable Item item) {
         remove(index);
         if (item != null) setSlotElement(index, new SlotElement.ItemSlotElement(item));
     }
-    
+
     @Override
     public void addItems(@NotNull Item... items) {
         for (Item item : items) {
@@ -713,11 +713,11 @@ public abstract class AbstractGui implements Gui, GuiParent {
             setItem(emptyIndex, item);
         }
     }
-    
+
     @Override
     public @Nullable Item getItem(int index) {
         SlotElement slotElement = slotElements[index];
-        
+
         if (slotElement instanceof SlotElement.ItemSlotElement) {
             return ((SlotElement.ItemSlotElement) slotElement).getItem();
         } else if (slotElement instanceof SlotElement.LinkedSlotElement) {
@@ -725,108 +725,108 @@ public abstract class AbstractGui implements Gui, GuiParent {
             if (holdingElement instanceof SlotElement.ItemSlotElement)
                 return ((SlotElement.ItemSlotElement) holdingElement).getItem();
         }
-        
+
         return null;
     }
-    
+
     @Override
     public @Nullable ItemProvider getBackground() {
         return background;
     }
-    
+
     @Override
     public void setBackground(ItemProvider itemProvider) {
         this.background = itemProvider;
     }
-    
+
     @Override
     public void remove(int index) {
         setSlotElement(index, null);
     }
-    
+
     @Override
     public void applyStructure(@NotNull Structure structure) {
         structure.getIngredientList().insertIntoGui(this);
     }
-    
+
     @Override
     public int getSize() {
         return size;
     }
-    
+
     @Override
     public void setFrozen(boolean frozen) {
         this.frozen = frozen;
     }
-    
+
     @Override
     public boolean isFrozen() {
         return frozen;
     }
-    
+
     @Override
     public void setIgnoreObscuredInventorySlots(boolean ignoreObscuredInventorySlots) {
         this.ignoreObscuredInventorySlots = ignoreObscuredInventorySlots;
     }
-    
+
     @Override
     public boolean isIgnoreObscuredInventorySlots() {
         return ignoreObscuredInventorySlots;
     }
-    
+
     // region coordinate-based methods
     @Override
     public void setSlotElement(int x, int y, SlotElement slotElement) {
         setSlotElement(convToIndex(x, y), slotElement);
     }
-    
+
     @Override
     public @Nullable SlotElement getSlotElement(int x, int y) {
         return getSlotElement(convToIndex(x, y));
     }
-    
+
     @Override
     public boolean hasSlotElement(int x, int y) {
         return hasSlotElement(convToIndex(x, y));
     }
-    
+
     @Override
     public void setItem(int x, int y, @Nullable Item item) {
         setItem(convToIndex(x, y), item);
     }
-    
+
     @Override
     public @Nullable Item getItem(int x, int y) {
         return getItem(convToIndex(x, y));
     }
-    
+
     @Override
     public void remove(int x, int y) {
         remove(convToIndex(x, y));
     }
-    
+
     @Override
     public int getWidth() {
         return width;
     }
-    
+
     @Override
     public int getHeight() {
         return height;
     }
-    
+
     private int convToIndex(int x, int y) {
         if (x >= width || y >= height) throw new IllegalArgumentException("Coordinates out of bounds");
         return SlotUtils.convertToIndex(x, y, width);
     }
-    
+
     private void fill(@NotNull Set<Integer> slots, @Nullable Item item, boolean replaceExisting) {
         for (int slot : slots) {
             if (!replaceExisting && hasSlotElement(slot)) continue;
             setItem(slot, item);
         }
     }
-    
+
     @Override
     public void fill(int start, int end, @Nullable Item item, boolean replaceExisting) {
         for (int i = start; i < end; i++) {
@@ -834,34 +834,34 @@ public abstract class AbstractGui implements Gui, GuiParent {
             setItem(i, item);
         }
     }
-    
+
     @Override
     public void fill(@Nullable Item item, boolean replaceExisting) {
         fill(0, getSize(), item, replaceExisting);
     }
-    
+
     @Override
     public void fillRow(int row, @Nullable Item item, boolean replaceExisting) {
         if (row >= height) throw new IllegalArgumentException("Row out of bounds");
         fill(SlotUtils.getSlotsRow(row, width), item, replaceExisting);
     }
-    
+
     @Override
     public void fillColumn(int column, @Nullable Item item, boolean replaceExisting) {
         if (column >= width) throw new IllegalArgumentException("Column out of bounds");
         fill(SlotUtils.getSlotsColumn(column, width, height), item, replaceExisting);
     }
-    
+
     @Override
     public void fillBorders(@Nullable Item item, boolean replaceExisting) {
         fill(SlotUtils.getSlotsBorders(width, height), item, replaceExisting);
     }
-    
+
     @Override
     public void fillRectangle(int x, int y, int width, int height, @Nullable Item item, boolean replaceExisting) {
         fill(SlotUtils.getSlotsRect(x, y, width, height, this.width), item, replaceExisting);
     }
-    
+
     @Override
     public void fillRectangle(int x, int y, @NotNull Gui gui, boolean replaceExisting) {
         int slotIndex = 0;
@@ -871,16 +871,16 @@ public abstract class AbstractGui implements Gui, GuiParent {
             slotIndex++;
         }
     }
-    
+
     @Override
     public void fillRectangle(int x, int y, int width, @NotNull Inventory inventory, boolean replaceExisting) {
         fillRectangle(x, y, width, inventory, null, replaceExisting);
     }
-    
+
     @Override
     public void fillRectangle(int x, int y, int width, @NotNull Inventory inventory, @Nullable ItemProvider background, boolean replaceExisting) {
         int height = (int) Math.ceil((double) inventory.getSize() / (double) width);
-        
+
         int slotIndex = 0;
         for (int slot : SlotUtils.getSlotsRect(x, y, width, height, this.width)) {
             if (slotIndex >= inventory.getSize()) return;
@@ -890,7 +890,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
         }
     }
     // endregion
-    
+
     /**
      * A builder for {@link AbstractGui AbstractGuis}.
      * <p>
@@ -903,7 +903,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
      */
     @SuppressWarnings("unchecked")
     public static abstract class AbstractBuilder<G extends Gui, S extends Gui.Builder<G, S>> implements Gui.Builder<G, S> {
-        
+
         /**
          * The structure of the {@link AbstractGui} being built.
          */
@@ -924,118 +924,123 @@ public abstract class AbstractGui implements Gui, GuiParent {
          * The {@link AbstractGui#ignoreObscuredInventorySlots} state of the {@link AbstractGui} being built.
          */
         protected boolean ignoreObscuredInventorySlots = true;
-        
+
         @Override
         public @NotNull S setStructure(int width, int height, @NotNull String structureData) {
             structure = new Structure(width, height, structureData);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S setStructure(@NotNull String... structureData) {
             structure = new Structure(structureData);
             return (S) this;
         }
-        
+
+        @Override
+        public @NotNull S setStructure(@NotNull List<String> structureData) {
+            return this.setStructure(structureData.toArray(new String[0]));
+        }
+
         @Override
         public @NotNull S setStructure(@NotNull Structure structure) {
             this.structure = structure;
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull ItemStack itemStack) {
             structure.addIngredient(key, itemStack);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull ItemProvider itemProvider) {
             structure.addIngredient(key, itemProvider);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull Item item) {
             structure.addIngredient(key, item);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull Inventory inventory) {
             structure.addIngredient(key, inventory);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull Inventory inventory, @Nullable ItemProvider background) {
             structure.addIngredient(key, inventory, background);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull SlotElement element) {
             structure.addIngredient(key, element);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull Marker marker) {
             structure.addIngredient(key, marker);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredient(char key, @NotNull Supplier<? extends Item> itemSupplier) {
             structure.addIngredient(key, itemSupplier);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addIngredientElementSupplier(char key, @NotNull Supplier<? extends SlotElement> elementSupplier) {
             structure.addIngredientElementSupplier(key, elementSupplier);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S setBackground(@NotNull ItemProvider itemProvider) {
             background = itemProvider;
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S setBackground(@NotNull ItemStack itemStack) {
             background = new ItemWrapper(itemStack);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S setFrozen(boolean frozen) {
             this.frozen = frozen;
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S setIgnoreObscuredInventorySlots(boolean ignoreObscuredInventorySlots) {
             this.ignoreObscuredInventorySlots = ignoreObscuredInventorySlots;
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S addModifier(@NotNull Consumer<@NotNull G> modifier) {
             if (modifiers == null)
                 modifiers = new ArrayList<>();
-            
+
             modifiers.add(modifier);
             return (S) this;
         }
-        
+
         @Override
         public @NotNull S setModifiers(@NotNull List<@NotNull Consumer<@NotNull G>> modifiers) {
             this.modifiers = modifiers;
             return (S) this;
         }
-        
+
         /**
          * Applies the {@link AbstractBuilder#modifiers} to the given {@link AbstractGui}.
          *
@@ -1047,7 +1052,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
             if (background != null) gui.setBackground(background);
             if (modifiers != null) modifiers.forEach(modifier -> modifier.accept(gui));
         }
-        
+
         @SuppressWarnings("unchecked")
         @Override
         public @NotNull S clone() {
@@ -1061,7 +1066,7 @@ public abstract class AbstractGui implements Gui, GuiParent {
                 throw new AssertionError();
             }
         }
-        
+
     }
-    
+
 }

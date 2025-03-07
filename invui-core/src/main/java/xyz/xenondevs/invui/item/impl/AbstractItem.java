@@ -1,5 +1,9 @@
 package xyz.xenondevs.invui.item.impl;
 
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.jetbrains.annotations.NotNull;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.window.AbstractWindow;
 import xyz.xenondevs.invui.window.Window;
@@ -34,5 +38,7 @@ public abstract class AbstractItem implements Item {
     public void notifyWindows() {
         windows.forEach(w -> w.handleItemProviderUpdate(this));
     }
-    
+
+    @Override
+    public void handleClick(@NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event) {}
 }

@@ -436,7 +436,17 @@ public interface Gui {
          */
         @Contract("_ -> this")
         @NotNull S setStructure(@NotNull String... structureData);
-        
+
+        /**
+         * Sets the {@link Structure} of the {@link Gui} using the given structure data Strings.
+         * Each String is interpreted as a row of the {@link Gui}. All Strings must have the same length.
+         *
+         * @param structureData The structure data
+         * @return This {@link Builder Gui Builder}
+         */
+        @Contract("_ -> this")
+        @NotNull S setStructure(@NotNull List<String> structureData);
+
         /**
          * Sets the {@link Structure} of the {@link Gui} using the given structure data, width and height.
          *

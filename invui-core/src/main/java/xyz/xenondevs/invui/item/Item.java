@@ -6,6 +6,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.window.AbstractWindow;
 import xyz.xenondevs.invui.window.Window;
 
@@ -19,7 +20,7 @@ public interface Item {
      *
      * @return The {@link ItemProvider}
      */
-    ItemProvider getItemProvider();
+    ItemProvider getItemProvider(@Nullable Player viewer);
     
     /**
      * Adds an {@link AbstractWindow} to the window set, telling the {@link Item} that it is

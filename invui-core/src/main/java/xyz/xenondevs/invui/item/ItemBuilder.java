@@ -17,6 +17,7 @@ import org.bukkit.inventory.meta.*;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,11 +58,11 @@ public class ItemBuilder implements ItemProvider {
     /**
      * The damage value of the {@link ItemStack}
      */
-    protected int damage;
+    protected Integer damage;
     /**
      * The custom model data value of the {@link ItemStack}.
      */
-    protected int customModelData;
+    protected Integer customModelData;
     /**
      * The unbreakable state of the {@link ItemStack}.
      */
@@ -69,11 +70,11 @@ public class ItemBuilder implements ItemProvider {
     /**
      * The display name of the {@link ItemStack}.
      */
-    protected ComponentWrapper displayName;
+    protected String displayName;
     /**
      * The lore of the {@link ItemStack}.
      */
-    protected List<ComponentWrapper> lore;
+    protected List<String> lore;
     /**
      * The selected {@link ItemFlag ItemFlags} of the {@link ItemStack}.
      */
@@ -89,14 +90,17 @@ public class ItemBuilder implements ItemProvider {
 
     private List<Pattern> patterns = new ArrayList<>();
 
-    private int power = -1;
+    private Integer fireworkPower;
     private List<FireworkEffect> fireworkEffects = new ArrayList<>();
+    private FireworkEffect fireworkEffect;
 
     private List<PotionEffect> potionEffects = new ArrayList<>();
     private Color potionColor;
+    private PotionType potionType;
     private PotionData basePotionData;
 
     private GameProfile gameProfile;
+    private String skin;
 
     /**
      * Constructs a new {@link ItemBuilder} based on the given {@link Material}.
@@ -127,6 +131,7 @@ public class ItemBuilder implements ItemProvider {
     public ItemBuilder(@NotNull ItemStack base) {
         this.base = base.clone();
         this.amount = base.getAmount();
+        this.material = base.getType();
     }
 
     /**
@@ -149,31 +154,21 @@ public class ItemBuilder implements ItemProvider {
         if (itemMeta != null) {
             // display name
             if (displayName != null) {
-                InventoryAccess.getItemUtils().setDisplayName(
-                        itemMeta,
-                        (lang != null) ? displayName.localized(lang) : displayName
-                );
+                itemMeta.setDisplayName(displayName);
             }
 
             // lore
             if (lore != null) {
-                if (lang != null) {
-                    var translatedLore = lore.stream()
-                            .map(wrapper -> wrapper.localized(lang))
-                            .collect(Collectors.toList());
-
-                    InventoryAccess.getItemUtils().setLore(itemMeta, translatedLore);
-                } else {
-                    InventoryAccess.getItemUtils().setLore(itemMeta, lore);
-                }
+                itemMeta.setLore(lore);
             }
 
             // damage
             if (itemMeta instanceof Damageable)
-                ((Damageable) itemMeta).setDamage(damage);
+                if (damage != null)
+                    ((Damageable) itemMeta).setDamage(damage);
 
             // custom model data
-            if (customModelData != 0)
+            if (customModelData != null)
                 itemMeta.setCustomModelData(customModelData);
 
             // unbreakable
@@ -197,34 +192,38 @@ public class ItemBuilder implements ItemProvider {
             }
 
             // banner meta
-            if (itemMeta instanceof BannerMeta) {
-                BannerMeta bannerMeta = (BannerMeta) itemMeta;
+            if (itemMeta instanceof BannerMeta bannerMeta) {
                 bannerMeta.setPatterns(patterns);
             }
 
             // firework meta
-            if (itemMeta instanceof FireworkMeta) {
-                FireworkMeta fireworkMeta = (FireworkMeta) itemMeta;
-                if (power != -1) fireworkMeta.setPower(power);
+            if (itemMeta instanceof FireworkMeta fireworkMeta) {
+                if (fireworkPower != null) fireworkMeta.setPower(fireworkPower);
                 fireworkMeta.clearEffects();
                 fireworkMeta.addEffects(fireworkEffects);
             }
 
+            if (itemMeta instanceof FireworkEffectMeta fireworkEffectMeta) {
+                if (fireworkEffect != null) fireworkEffectMeta.setEffect(fireworkEffect);
+            }
+
             // potion meta
-            if (itemMeta instanceof PotionMeta) {
-                PotionMeta potionMeta = (PotionMeta) itemMeta;
+            if (itemMeta instanceof PotionMeta potionMeta) {
                 potionMeta.clearCustomEffects();
                 if (potionColor != null) potionMeta.setColor(potionColor);
+                if (potionType != null) potionMeta.setBasePotionType(potionType);
                 if (basePotionData != null) potionMeta.setBasePotionData(basePotionData);
                 potionEffects.forEach(effect -> potionMeta.addCustomEffect(effect, true));
             }
 
             // skull texture
-            if (gameProfile != null) {
-                if (ReflectionRegistry.CB_CRAFT_META_SKULL_SET_PROFILE_METHOD != null) {
-                    ReflectionUtils.invokeMethod(ReflectionRegistry.CB_CRAFT_META_SKULL_SET_PROFILE_METHOD, itemMeta, gameProfile);
-                } else {
-                    ReflectionUtils.setFieldValue(ReflectionRegistry.CB_CRAFT_META_SKULL_PROFILE_FIELD, itemMeta, gameProfile);
+            if (itemMeta instanceof SkullMeta) {
+                if (gameProfile != null) {
+                    if (ReflectionRegistry.CB_CRAFT_META_SKULL_SET_PROFILE_METHOD != null) {
+                        ReflectionUtils.invokeMethod(ReflectionRegistry.CB_CRAFT_META_SKULL_SET_PROFILE_METHOD, itemMeta, gameProfile);
+                    } else {
+                        ReflectionUtils.setFieldValue(ReflectionRegistry.CB_CRAFT_META_SKULL_PROFILE_FIELD, itemMeta, gameProfile);
+                    }
                 }
             }
 
@@ -278,7 +277,7 @@ public class ItemBuilder implements ItemProvider {
      *
      * @return The {@link Material}
      */
-    public @Nullable Material getMaterial() {
+    public @NotNull Material getMaterial() {
         return material;
     }
 
@@ -320,7 +319,7 @@ public class ItemBuilder implements ItemProvider {
      *
      * @return The damage value
      */
-    public int getDamage() {
+    public @Nullable Integer getDamage() {
         return damage;
     }
 
@@ -341,7 +340,7 @@ public class ItemBuilder implements ItemProvider {
      *
      * @return The custom model data value
      */
-    public int getCustomModelData() {
+    public @Nullable Integer getCustomModelData() {
         return customModelData;
     }
 
@@ -383,8 +382,57 @@ public class ItemBuilder implements ItemProvider {
      *
      * @return The display name
      */
-    public @Nullable ComponentWrapper getDisplayName() {
+    public @Nullable PotionType getBasePotionType() {
+        return potionType;
+    }
+
+    /**
+     * Gets the display name.
+     *
+     * @return The display name
+     */
+    public @Nullable Color getPotionColor() {
+        return potionColor;
+    }
+
+    /**
+     * Gets the display name.
+     *
+     * @return The display name
+     */
+    public @Nullable GameProfile getGameProfile() {
+        return gameProfile;
+    }
+
+    /**
+     * Gets the skin.
+     *
+     * @return The skin
+     */
+    public @Nullable String getSkin() {
+        return skin;
+    }
+
+    /**
+     * Gets the display name.
+     *
+     * @return The display name
+     */
+    public @Nullable String getDisplayName() {
         return displayName;
+    }
+
+    public @Nullable Integer getFireworkPower() {
+        return fireworkPower;
+    }
+
+    /**
+     * Gets the display name.
+     *
+     * @return The display name
+     */
+    public @Nullable List<Pattern> getBannerPatterns() {
+        return patterns;
     }
 
     /**
@@ -395,31 +443,7 @@ public class ItemBuilder implements ItemProvider {
      */
     @Contract("_ -> this")
     public @NotNull ItemBuilder setDisplayName(String displayName) {
-        this.displayName = new BungeeComponentWrapper(TextComponent.fromLegacyText(displayName)).withoutPreFormatting();
-        return this;
-    }
-
-    /**
-     * Sets the display name.
-     *
-     * @param displayName The display name
-     * @return The builder instance
-     */
-    @Contract("_ -> this")
-    public @NotNull ItemBuilder setDisplayName(BaseComponent... displayName) {
-        this.displayName = new BungeeComponentWrapper(displayName).withoutPreFormatting();
-        return this;
-    }
-
-    /**
-     * Sets the display name.
-     *
-     * @param component The display name
-     * @return The builder instance
-     */
-    @Contract("_ -> this")
-    public @NotNull ItemBuilder setDisplayName(ComponentWrapper component) {
-        this.displayName = component.withoutPreFormatting();
+        this.displayName = displayName;
         return this;
     }
 
@@ -430,22 +454,8 @@ public class ItemBuilder implements ItemProvider {
      *
      * @return The lore
      */
-    public @Nullable List<ComponentWrapper> getLore() {
+    public @Nullable List<String> getLore() {
         return lore;
-    }
-
-    /**
-     * Sets the lore.
-     *
-     * @param lore The lore
-     * @return The builder instance
-     */
-    @Contract("_ -> this")
-    public @NotNull ItemBuilder setLore(@NotNull List<@NotNull ComponentWrapper> lore) {
-        this.lore = lore.stream()
-                .map(ComponentWrapper::withoutPreFormatting)
-                .collect(Collectors.toList());
-        return this;
     }
 
     /**
@@ -455,10 +465,8 @@ public class ItemBuilder implements ItemProvider {
      * @return The builder instance
      */
     @Contract("_ -> this")
-    public @NotNull ItemBuilder setLegacyLore(@NotNull List<@NotNull String> lore) {
-        this.lore = lore.stream()
-                .map(line -> new BungeeComponentWrapper(TextComponent.fromLegacyText(line)).withoutPreFormatting())
-                .collect(Collectors.toList());
+    public @NotNull ItemBuilder setLore(@NotNull List<@NotNull String> lore) {
+        this.lore = lore;
         return this;
     }
 
@@ -471,74 +479,7 @@ public class ItemBuilder implements ItemProvider {
     @Contract("_ -> this")
     public @NotNull ItemBuilder addLoreLines(@NotNull String... lines) {
         if (lore == null) lore = new ArrayList<>();
-
-        for (String line : lines)
-            lore.add(new BungeeComponentWrapper(TextComponent.fromLegacyText(line)).withoutPreFormatting());
-
-        return this;
-    }
-
-    /**
-     * Adds lore lines.
-     *
-     * @param lines The lore lines, where each {@link BaseComponent} array represents a line.
-     * @return The builder instance
-     */
-    @Contract("_ -> this")
-    public @NotNull ItemBuilder addLoreLines(@NotNull BaseComponent[]... lines) {
-        if (lore == null) lore = new ArrayList<>();
-
-        for (BaseComponent[] line : lines)
-            lore.add(new BungeeComponentWrapper(line).withoutPreFormatting());
-
-        return this;
-    }
-
-    /**
-     * Adds lore lines.
-     *
-     * @param lines The lore lines
-     * @return The builder instance
-     */
-    @Contract("_ -> this")
-    public @NotNull ItemBuilder addLoreLines(@NotNull ComponentWrapper... lines) {
-        if (lore == null) lore = new ArrayList<>();
-
-        for (ComponentWrapper line : lines)
-            lore.add(line.withoutPreFormatting());
-
-        return this;
-    }
-
-    /**
-     * Adds lore lines.
-     *
-     * @param lines The lore lines
-     * @return The builder instance
-     */
-    @Contract("_ -> this")
-    public @NotNull ItemBuilder addLoreLines(@NotNull List<@NotNull ComponentWrapper> lines) {
-        if (lore == null) lore = new ArrayList<>();
-
-        for (ComponentWrapper line : lines)
-            lore.add(line.withoutPreFormatting());
-
-        return this;
-    }
-
-    /**
-     * Adds lore lines using the legacy text format.
-     *
-     * @param lines The lore lines
-     * @return The builder instance
-     */
-    @Contract("_ -> this")
-    public @NotNull ItemBuilder addLegacyLoreLines(@NotNull List<@NotNull String> lines) {
-        if (lore == null) lore = new ArrayList<>();
-
-        for (String line : lines)
-            lore.add(new BungeeComponentWrapper(TextComponent.fromLegacyText(line)).withoutPreFormatting());
-
+        Collections.addAll(lore, lines);
         return this;
     }
     //</editor-fold>
@@ -576,6 +517,32 @@ public class ItemBuilder implements ItemProvider {
     public @NotNull ItemBuilder addItemFlags(@NotNull ItemFlag... itemFlags) {
         if (this.itemFlags == null) this.itemFlags = new ArrayList<>();
         this.itemFlags.addAll(Arrays.asList(itemFlags));
+        return this;
+    }
+
+    /**
+     * Adds {@link ItemFlag ItemFlags}.
+     *
+     * @param itemFlags The {@link ItemFlag ItemFlags}
+     * @return The builder instance
+     */
+    @Contract("_ -> this")
+    public @NotNull ItemBuilder addItemFlags(@NotNull List<ItemFlag> itemFlags) {
+        if (this.itemFlags == null) this.itemFlags = new ArrayList<>();
+        this.itemFlags.addAll(itemFlags);
+        return this;
+    }
+
+    /**
+     * Add {@link ItemFlag ItemFlag}.
+     *
+     * @param itemFlag The {@link ItemFlag ItemFlag}
+     * @return The builder instance
+     */
+    @Contract("_ -> this")
+    public @NotNull ItemBuilder addItemFlag(@NotNull ItemFlag itemFlag) {
+        if (this.itemFlags == null) this.itemFlags = new ArrayList<>();
+        this.itemFlags.add(itemFlag);
         return this;
     }
 
@@ -726,7 +693,7 @@ public class ItemBuilder implements ItemProvider {
     }
 
     @Contract("_ -> this")
-    public @NotNull ItemBuilder setPatterns(@NotNull List<@NotNull Pattern> patterns) {
+    public @NotNull ItemBuilder setBannerPatterns(@NotNull List<@NotNull Pattern> patterns) {
         this.patterns = patterns;
         return this;
     }
@@ -738,8 +705,8 @@ public class ItemBuilder implements ItemProvider {
     }
 
     @Contract("_ -> this")
-    public @NotNull ItemBuilder setPower(@Range(from = 0, to = 127) int power) {
-        this.power = power;
+    public @NotNull ItemBuilder setFireworkPower(@Range(from = 0, to = 127) int power) {
+        this.fireworkPower = power;
         return this;
     }
 
@@ -768,6 +735,32 @@ public class ItemBuilder implements ItemProvider {
     }
 
     @Contract("_ -> this")
+    public @NotNull ItemBuilder setFireworkEffect(@NotNull FireworkEffect effect) {
+        this.fireworkEffect = effect;
+        return this;
+    }
+
+    public @Nullable FireworkEffect getFireworkEffect() {
+        return fireworkEffect;
+    }
+
+    @Contract("_ -> this")
+    public @NotNull ItemBuilder setFireworkEffect(@NotNull FireworkEffect.Builder effect) {
+        this.fireworkEffect = effect.build();
+        return this;
+    }
+
+    public @Nullable List<FireworkEffect> getFireworkEffects() {
+        return this.fireworkEffects;
+    }
+
+    @Contract("_ -> this")
+    public @NotNull ItemBuilder setBasePotionType(@NotNull PotionType potionType) {
+        this.potionType = potionType;
+        return this;
+    }
+
+    @Contract("_ -> this")
     public @NotNull ItemBuilder setPotionColor(@NotNull Color potionColor) {
         this.potionColor = potionColor;
         return this;
@@ -791,14 +784,23 @@ public class ItemBuilder implements ItemProvider {
         return this;
     }
 
-    @Contract("_ -> this")
+    @Contract("_, _, _ -> this")
     public @NotNull ItemBuilder addPotionEffect(@NotNull PotionEffectType type, int duration, int amplifier) {
         potionEffects.add(new PotionEffect(type, duration, amplifier));
         return this;
     }
 
+    public @NotNull ItemBuilder setSkin(String skin) {
+        this.skin = skin;
+        gameProfile = new GameProfile(UUID.randomUUID(), "InvUI");
+        PropertyMap propertyMap = gameProfile.getProperties();
+        propertyMap.put("textures", new Property("textures", this.skin));
+        return this;
+    }
+
     @Contract("_ -> this")
-    private @NotNull ItemBuilder setGameProfile(@NotNull HeadTexture texture) {
+    public @NotNull ItemBuilder setGameProfile(@NotNull HeadTexture texture) {
+        skin = texture.getTextureValue();
         gameProfile = new GameProfile(UUID.randomUUID(), "InvUI");
         PropertyMap propertyMap = gameProfile.getProperties();
         propertyMap.put("textures", new Property("textures", texture.getTextureValue()));
@@ -833,29 +835,18 @@ public class ItemBuilder implements ItemProvider {
             if (patterns != null) clone.patterns = new ArrayList<>(patterns);
             if (fireworkEffects != null) clone.fireworkEffects = new ArrayList<>(fireworkEffects);
             if (potionEffects != null) clone.potionEffects = new ArrayList<>(potionEffects);
+            if (fireworkEffect != null) clone.fireworkEffect = fireworkEffect;
+            if (gameProfile != null) clone.gameProfile = gameProfile;
+            if (potionType != null) clone.potionType = potionType;
+            if (potionColor != null) clone.potionColor = potionColor;
+            if (basePotionData != null) clone.basePotionData = basePotionData;
+            if (skin != null) clone.skin = skin;
+
 
             return clone;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError(e);
         }
-    }
-
-    public enum PotionType {
-
-        NORMAL(Material.POTION),
-        SPLASH(Material.SPLASH_POTION),
-        LINGERING(Material.LINGERING_POTION);
-
-        private final @NotNull Material material;
-
-        PotionType(@NotNull Material material) {
-            this.material = material;
-        }
-
-        public @NotNull Material getMaterial() {
-            return material;
-        }
-
     }
 
     /**

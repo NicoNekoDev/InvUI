@@ -6,7 +6,7 @@
     <parent>
         <groupId>xyz.xenondevs.invui</groupId>
         <artifactId>invui-parent</artifactId>
-        <version>1.33</version>
+        <version>1.34</version>
     </parent>
 
     <artifactId>invui</artifactId>
@@ -21,81 +21,6 @@
         <dependency>
             <groupId>xyz.xenondevs.invui</groupId>
             <artifactId>invui-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r1</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r2</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r3</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r4</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r5</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r6</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r7</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r8</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r9</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r10</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r11</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r12</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r13</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r14</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>inventory-access-r15</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -12,23 +12,23 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class SuppliedItem extends AbstractItem {
-    
+
     private final Supplier<? extends ItemProvider> builderSupplier;
     private final Function<Click, Boolean> clickHandler;
-    
+
     public SuppliedItem(@NotNull Supplier<? extends ItemProvider> builderSupplier, @Nullable Function<Click, Boolean> clickHandler) {
         this.builderSupplier = builderSupplier;
         this.clickHandler = clickHandler;
     }
-    
+
     @Override
-    public ItemProvider getItemProvider() {
+    public ItemProvider getItemProvider(@Nullable Player viewer) {
         return builderSupplier.get();
     }
-    
+
     @Override
     public void handleClick(@NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event) {
         if (clickHandler != null && clickHandler.apply(new Click(event))) notifyWindows();
     }
-    
+
 }

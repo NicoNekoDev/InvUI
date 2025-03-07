@@ -6,6 +6,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.InvUI;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemProvider;
@@ -45,7 +46,7 @@ public class AutoCycleItem extends AbstractItem {
     }
     
     @Override
-    public ItemProvider getItemProvider() {
+    public ItemProvider getItemProvider(@Nullable Player viewer) {
         return itemProviders[state];
     }
     

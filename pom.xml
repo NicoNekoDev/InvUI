@@ -6,7 +6,7 @@
 
     <groupId>xyz.xenondevs.invui</groupId>
     <artifactId>invui-parent</artifactId>
-    <version>1.33</version>
+    <version>1.34</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -63,21 +63,6 @@
 
     <modules>
         <module>inventoryaccess/inventory-access</module>
-        <module>inventoryaccess/inventory-access-r1</module>
-        <module>inventoryaccess/inventory-access-r2</module>
-        <module>inventoryaccess/inventory-access-r3</module>
-        <module>inventoryaccess/inventory-access-r4</module>
-        <module>inventoryaccess/inventory-access-r5</module>
-        <module>inventoryaccess/inventory-access-r6</module>
-        <module>inventoryaccess/inventory-access-r7</module>
-        <module>inventoryaccess/inventory-access-r8</module>
-        <module>inventoryaccess/inventory-access-r9</module>
-        <module>inventoryaccess/inventory-access-r10</module>
-        <module>inventoryaccess/inventory-access-r11</module>
-        <module>inventoryaccess/inventory-access-r12</module>
-        <module>inventoryaccess/inventory-access-r13</module>
-        <module>inventoryaccess/inventory-access-r14</module>
-        <module>inventoryaccess/inventory-access-r15</module>
         <module>inventoryaccess/inventory-access-r16</module>
         <module>inventoryaccess/inventory-access-r17</module>
         <module>inventoryaccess/inventory-access-r18</module>

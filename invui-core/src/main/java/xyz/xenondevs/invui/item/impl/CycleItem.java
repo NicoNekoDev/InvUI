@@ -42,7 +42,7 @@ public class CycleItem extends AbstractItem {
     }
     
     @Override
-    public ItemProvider getItemProvider() {
+    public ItemProvider getItemProvider(@Nullable Player viewer) {
         return states[state];
     }
     
